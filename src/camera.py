@@ -12,7 +12,10 @@ class Camera:
         self.cam_sn = settings['serial']
         self.settings_dict = settings
         self.cam = None
-        self.save_dir = os.path.join("images", self.cam_sn)
+
+        # Папка 'images/{serial}' в корне проекта
+        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self.save_dir = os.path.join(project_root, "images", self.cam_sn)
         os.makedirs(self.save_dir, exist_ok=True)
 
     def check_camera_numbers(self):
@@ -118,7 +121,6 @@ def stream_camera(camera: Camera):
 
             camera.save_frame(frame)
 
-            # Показ в окне (по желанию — можно убрать)
             resized = cv2.resize(frame, (640, 360))
             cv2.imshow("Camera Stream", resized)
 
