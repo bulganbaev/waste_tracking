@@ -1,0 +1,102 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Cython build
+*.c
+*.cpp
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs
+.idea/
+.vscode/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# PyInstaller
+*.manifest
+*.spec
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# Pytype
+.pytype/
+
+# Coverage reports
+.coverage
+coverage.xml
+*.cover
+*.py,cover
+htmlcov/
+.tox/
+
+# Test / coverage tools
+nosetests.xml
+coverage.xml
+*.log
+
+# Pytest
+.pytest_cache/
+.cache/
+
+# Logs and local files
+*.log
+*.pot
+*.mo
+*.pyo
+*.pyd
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Local database / SQLite
+*.sqlite3
+*.db
+
+# Backup files
+*.bak
+*.swp
+*.swo
+*~
+
+# Docker
+*.pid
+*.pid.lock
+
+# VSCode test history
+.history/
