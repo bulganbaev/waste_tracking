@@ -3,6 +3,7 @@ import gxipy as gx
 import cv2
 import numpy as np
 from datetime import datetime
+import platform
 
 
 class Camera:
@@ -91,7 +92,7 @@ class Camera:
         self.stop_camera()
 
 
-def stream_camera(camera: Camera, save=False):
+def stream_camera(camera: Camera, save=False, use_h264=True):
     try:
         camera.check_camera_numbers()
         camera.camera_settings()
@@ -100,7 +101,6 @@ def stream_camera(camera: Camera, save=False):
         print("[INFO] Трансляция запущена. Нажмите 'q' для выхода.")
         last_time = time.time()
         frame_count = 0
-
         video_writer = None
 
         while True:
@@ -109,18 +109,36 @@ def stream_camera(camera: Camera, save=False):
                 print("[WARN] Повреждённый кадр, пропускаем...")
                 continue
 
+            # Инициализация записи (один раз, при первом кадре)
             if save and video_writer is None:
                 h, w = frame.shape[:2]
                 now_str = datetime.now().strftime("%Y%m%d_%H%M%S")
-                filename = f"output_{now_str}.avi"
-                video_writer = cv2.VideoWriter(
-                    filename,
-                    cv2.VideoWriter_fourcc(*'XVID'),
-                    15.0,
-                    (w, h)
-                )
-                print(f"[INFO] Запись видео: {filename}")
 
+                if use_h264:
+                    filename = f"output_{now_str}.mp4"
+                    try:
+                        if platform.system() == "Windows":
+                            fourcc = cv2.VideoWriter_fourcc(*'H264')
+                        else:
+                            fourcc = cv2.VideoWriter_fourcc(*'avc1')  # H.264 fallback
+                        video_writer = cv2.VideoWriter(filename, fourcc, 15.0, (w, h))
+                        if not video_writer.isOpened():
+                            raise Exception("VideoWriter не открылся с H.264")
+                        print(f"[INFO] Запись H.264: {filename}")
+                    except Exception as e:
+                        print(f"[ERROR] Не удалось использовать H.264: {e}")
+                        filename = f"output_{now_str}.avi"
+                        fourcc = cv2.VideoWriter_fourcc(*'XVID')
+                        video_writer = cv2.VideoWriter(filename, fourcc, 15.0, (w, h))
+                        print(f"[INFO] Переход на XVID: {filename}")
+
+                else:
+                    filename = f"output_{now_str}.avi"
+                    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+                    video_writer = cv2.VideoWriter(filename, fourcc, 15.0, (w, h))
+                    print(f"[INFO] Запись XVID: {filename}")
+
+            # Вывод FPS
             frame_count += 1
             now = time.time()
             if now - last_time >= 1.0:
@@ -128,6 +146,7 @@ def stream_camera(camera: Camera, save=False):
                 frame_count = 0
                 last_time = now
 
+            # Показ в окне
             scale_percent = 20
             width = int(frame.shape[1] * scale_percent / 100)
             height = int(frame.shape[0] * scale_percent / 100)
@@ -160,4 +179,5 @@ if __name__ == "__main__":
     }
 
     camera = Camera(settings)
-    stream_camera(camera, save=True)  # True — сохранить .avi с цветом
+    # save=True — записывать, use_h264=False — использовать XVID
+    stream_camera(camera, save=True, use_h264=True)
