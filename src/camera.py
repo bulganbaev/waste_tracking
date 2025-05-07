@@ -2,6 +2,7 @@ import time
 import gxipy as gx
 import cv2
 import numpy as np
+from datetime import datetime
 
 
 class Camera:
@@ -101,25 +102,24 @@ def stream_camera(camera: Camera, save=False):
         frame_count = 0
 
         video_writer = None
-        if save:
-            print("[INFO] Запись видео включена.")
-            while True:
-                first_frame = camera.get_frame()
-                if first_frame is not None:
-                    h, w = first_frame.shape[:2]
-                    video_writer = cv2.VideoWriter(
-                        "output.avi",
-                        cv2.VideoWriter_fourcc(*'XVID'),
-                        15.0,
-                        (w, h)
-                    )
-                    break
 
         while True:
             frame = camera.get_frame()
             if frame is None:
                 print("[WARN] Повреждённый кадр, пропускаем...")
                 continue
+
+            if save and video_writer is None:
+                h, w = frame.shape[:2]
+                now_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+                filename = f"output_{now_str}.avi"
+                video_writer = cv2.VideoWriter(
+                    filename,
+                    cv2.VideoWriter_fourcc(*'XVID'),
+                    15.0,
+                    (w, h)
+                )
+                print(f"[INFO] Запись видео: {filename}")
 
             frame_count += 1
             now = time.time()
@@ -146,6 +146,7 @@ def stream_camera(camera: Camera, save=False):
     finally:
         if save and video_writer:
             video_writer.release()
+            print("[INFO] Видеофайл сохранён.")
         camera.stop_camera()
         cv2.destroyAllWindows()
         print("[INFO] Трансляция остановлена.")
@@ -153,10 +154,10 @@ def stream_camera(camera: Camera, save=False):
 
 if __name__ == "__main__":
     settings = {
-        'serial': 'CCA23050008',
+        'serial': 'CCA24130001',
         'exposure_time': 20000.0,
         'gain': 5.0
     }
 
     camera = Camera(settings)
-    stream_camera(camera, save=True)  # Поставь save=True для записи видео
+    stream_camera(camera, save=True)  # True — сохранить .avi с цветом
