@@ -3,7 +3,7 @@ import gxipy as gx
 import cv2
 import numpy as np
 from datetime import datetime
-import platform
+import os
 
 
 class Camera:
@@ -12,6 +12,8 @@ class Camera:
         self.cam_sn = settings['serial']
         self.settings_dict = settings
         self.cam = None
+        self.save_dir = os.path.join("images", self.cam_sn)
+        os.makedirs(self.save_dir, exist_ok=True)
 
     def check_camera_numbers(self):
         dev_num, _ = self.device_manager.update_device_list()
@@ -88,11 +90,17 @@ class Camera:
             print(f"[ERROR] Ошибка получения кадра: {e}")
             return None
 
+    def save_frame(self, frame):
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+        filename = os.path.join(self.save_dir, f"{timestamp}.jpg")
+        cv2.imwrite(filename, frame)
+        print(f"[INFO] Сохранён кадр: {filename}")
+
     def __del__(self):
         self.stop_camera()
 
 
-def stream_camera(camera: Camera, save=False, use_h264=True):
+def stream_camera(camera: Camera):
     try:
         camera.check_camera_numbers()
         camera.camera_settings()
@@ -101,7 +109,6 @@ def stream_camera(camera: Camera, save=False, use_h264=True):
         print("[INFO] Трансляция запущена. Нажмите 'q' для выхода.")
         last_time = time.time()
         frame_count = 0
-        video_writer = None
 
         while True:
             frame = camera.get_frame()
@@ -109,52 +116,18 @@ def stream_camera(camera: Camera, save=False, use_h264=True):
                 print("[WARN] Повреждённый кадр, пропускаем...")
                 continue
 
-            # Инициализация записи (один раз, при первом кадре)
-            if save and video_writer is None:
-                h, w = frame.shape[:2]
-                now_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+            camera.save_frame(frame)
 
-                if use_h264:
-                    filename = f"output_{now_str}.mp4"
-                    try:
-                        if platform.system() == "Windows":
-                            fourcc = cv2.VideoWriter_fourcc(*'H264')
-                        else:
-                            fourcc = cv2.VideoWriter_fourcc(*'avc1')  # H.264 fallback
-                        video_writer = cv2.VideoWriter(filename, fourcc, 15.0, (w, h))
-                        if not video_writer.isOpened():
-                            raise Exception("VideoWriter не открылся с H.264")
-                        print(f"[INFO] Запись H.264: {filename}")
-                    except Exception as e:
-                        print(f"[ERROR] Не удалось использовать H.264: {e}")
-                        filename = f"output_{now_str}.avi"
-                        fourcc = cv2.VideoWriter_fourcc(*'XVID')
-                        video_writer = cv2.VideoWriter(filename, fourcc, 15.0, (w, h))
-                        print(f"[INFO] Переход на XVID: {filename}")
+            # Показ в окне (по желанию — можно убрать)
+            resized = cv2.resize(frame, (640, 360))
+            cv2.imshow("Camera Stream", resized)
 
-                else:
-                    filename = f"output_{now_str}.avi"
-                    fourcc = cv2.VideoWriter_fourcc(*'XVID')
-                    video_writer = cv2.VideoWriter(filename, fourcc, 15.0, (w, h))
-                    print(f"[INFO] Запись XVID: {filename}")
-
-            # Вывод FPS
             frame_count += 1
             now = time.time()
             if now - last_time >= 1.0:
                 print(f"[INFO] FPS: {frame_count}")
                 frame_count = 0
                 last_time = now
-
-            # Показ в окне
-            scale_percent = 20
-            width = int(frame.shape[1] * scale_percent / 100)
-            height = int(frame.shape[0] * scale_percent / 100)
-            resized_frame = cv2.resize(frame, (width, height), interpolation=cv2.INTER_AREA)
-            cv2.imshow("Camera Stream", resized_frame)
-
-            if save and video_writer:
-                video_writer.write(frame)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
@@ -163,9 +136,6 @@ def stream_camera(camera: Camera, save=False, use_h264=True):
         print(f"[ERROR] Ошибка запуска: {e}")
 
     finally:
-        if save and video_writer:
-            video_writer.release()
-            print("[INFO] Видеофайл сохранён.")
         camera.stop_camera()
         cv2.destroyAllWindows()
         print("[INFO] Трансляция остановлена.")
@@ -179,5 +149,4 @@ if __name__ == "__main__":
     }
 
     camera = Camera(settings)
-    # save=True — записывать, use_h264=False — использовать XVID
-    stream_camera(camera, save=True, use_h264=True)
+    stream_camera(camera)
