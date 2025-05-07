@@ -100,3 +100,7 @@ desktop.ini
 
 # VSCode test history
 .history/
+
+# Ignore all JPG images
+*.jpg
+*.JPG
