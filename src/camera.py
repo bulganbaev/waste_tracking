@@ -51,7 +51,7 @@ class Camera:
             print("[INFO] BayerRG10 установлен (резерв).")
 
         if self.cam.AcquisitionFrameRate.is_writable():
-            self.cam.AcquisitionFrameRate.set(30)
+            self.cam.AcquisitionFrameRate.set(60)
 
         print("[INFO] Настройки камеры применены.")
 
@@ -75,7 +75,7 @@ class Camera:
 
     def get_frame(self):
         try:
-            raw_image = self.cam.data_stream[0].get_image(timeout=3000)
+            raw_image = self.cam.data_stream[0].get_image(timeout=1000)
             if raw_image is None or raw_image.get_status() != 0:
                 return None
 
@@ -144,9 +144,15 @@ def stream_camera(camera: Camera):
 
 
 if __name__ == "__main__":
+    # settings = {
+    #     'serial': 'CCA23050008',
+    #     'exposure_time': 15000.0,
+    #     'gain': 5.0
+    # }
+
     settings = {
         'serial': 'CCA24130001',
-        'exposure_time': 20000.0,
+        'exposure_time': 15000.0,
         'gain': 5.0
     }
 
