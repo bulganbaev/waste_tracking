@@ -144,17 +144,17 @@ def stream_camera(camera: Camera):
 
 
 if __name__ == "__main__":
-    # settings = {
-    #     'serial': 'CCA23050008',
-    #     'exposure_time': 15000.0,
-    #     'gain': 5.0
-    # }
-
     settings = {
-        'serial': 'CCA24130001',
+        'serial': 'CCA23050008',
         'exposure_time': 15000.0,
         'gain': 5.0
     }
+
+    # settings = {
+    #     'serial': 'CCA24130001',
+    #     'exposure_time': 15000.0,
+    #     'gain': 5.0
+    # }
 
     camera = Camera(settings)
     stream_camera(camera)
